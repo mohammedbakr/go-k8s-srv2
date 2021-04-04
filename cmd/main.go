@@ -15,9 +15,9 @@ var (
 	routingKey = "clean-request"
 	queueName  = "clean-queue"
 
-	output_exchange   = "processing-exchange"
-	output_routingKey = "processing-request"
-	output_queueName  = "processing-queue"
+	output_exchange   = "output-exchange"
+	output_routingKey = "output-request"
+	output_queueName  = "output-queue"
 
 	inputMount                     = os.Getenv("INPUT_MOUNT")
 	adaptationRequestQueueHostname = os.Getenv("ADAPTATION_REQUEST_QUEUE_HOSTNAME")
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// Initiate a publisher on processing exchange
-	publisher, err = rabbitmq.NewQueuePublisher(connection, "outcome-exchange")
+	publisher, err = rabbitmq.NewQueuePublisher(connection, output_exchange)
 	if err != nil {
 		log.Fatalf("could not start publisher %s", err)
 	}
@@ -104,7 +104,7 @@ func processMessage(d amqp.Delivery) error {
 
 	d.Headers["file-outcome"] = "replace"
 	// Publish the details to Rabbit
-	err = rabbitmq.PublishMessage(publisher, "", d.Headers["reply-to"].(string), d.Headers, []byte(""))
+	err = rabbitmq.PublishMessage(publisher, output_exchange, output_routingKey, d.Headers, []byte(""))
 	if err != nil {
 		return err
 	}

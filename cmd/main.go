@@ -13,11 +13,11 @@ import (
 var (
 	ProcessingOutcomeExchange   = "processing-outcome-exchange"
 	ProcessingOutcomeRoutingKey = "processing-outcome"
-	ProcessingOutcomeQueueName  = "processing-outcome"
+	ProcessingOutcomeQueueName  = "processing-outcome-queue"
 
 	AdaptationOutcomeExchange   = "adaptation-outcome-exchange"
 	AdaptationOutcomeRoutingKey = "adaptation-outcome"
-	AdaptationOutcomeQueueName  = "adaptation-outcome"
+	AdaptationOutcomeQueueName  = "adaptation-outcome-queue"
 
 	inputMount                     = os.Getenv("INPUT_MOUNT")
 	adaptationRequestQueueHostname = os.Getenv("ADAPTATION_REQUEST_QUEUE_HOSTNAME")
@@ -69,12 +69,13 @@ func main() {
 
 func processMessage(d amqp.Delivery) error {
 
-	if d.Headers["file-id"] == nil ||
-		d.Headers["source-file-location"] == nil ||
-		d.Headers["clean-presigned-url"] == nil ||
-		d.Headers["rebuilt-file-location"] == nil {
-		return fmt.Errorf("Headers value is nil")
-	}
+	/*
+		if d.Headers["file-id"] == nil ||
+			d.Headers["source-file-location"] == nil ||
+			d.Headers["clean-file-presigned-url"] == nil ||
+			d.Headers["rebuilt-file-location"] == nil {
+			return fmt.Errorf("Headers value is nil")
+		}*/
 
 	fmt.Printf("%+v\n", d.Headers)
 	fileID := ""

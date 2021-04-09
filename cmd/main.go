@@ -15,9 +15,9 @@ var (
 	ProcessingOutcomeRoutingKey = "processing-outcome"
 	ProcessingOutcomeQueueName  = "processing-outcome-queue"
 
-	AdaptationOutcomeExchange   = "adaptation-outcome-exchange"
-	AdaptationOutcomeRoutingKey = "adaptation-outcome"
-	AdaptationOutcomeQueueName  = "adaptation-outcome-queue"
+	AdaptationOutcomeExchange   = "adaptation-exchange"
+	AdaptationOutcomeRoutingKey = "adaptation-exchange"
+	AdaptationOutcomeQueueName  = "amq.rabbitmq.reply-to"
 
 	inputMount                     = os.Getenv("INPUT_MOUNT")
 	adaptationRequestQueueHostname = os.Getenv("ADAPTATION_REQUEST_QUEUE_HOSTNAME")

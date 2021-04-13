@@ -104,7 +104,7 @@ func processMessage(d amqp.Delivery) error {
 
 	d.Headers["file-outcome"] = "replace"
 	// Publish the details to Rabbit
-	err = rabbitmq.PublishMessage(publisher, AdaptationOutcomeExchange, AdaptationOutcomeRoutingKey, d.Headers, []byte(""))
+	err = rabbitmq.PublishMessage(publisher, "", d.Headers["reply-to"].(string), d.Headers, []byte(""))
 	if err != nil {
 		return err
 	}

@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	exchange   = "clean-exchange"
-	routingKey = "clean-request"
-	queueName  = "clean-queue"
+	ProcessingOutcomeExchange   = "processing-outcome-exchange"
+	ProcessingOutcomeRoutingKey = "processing-outcome"
+	ProcessingOutcomeQueueName  = "processing-outcome-queue"
 
-	output_exchange   = "processing-exchange"
-	output_routingKey = "processing-request"
-	output_queueName  = "processing-queue"
+	AdaptationOutcomeExchange   = "adaptation-exchange"
+	AdaptationOutcomeRoutingKey = "adaptation-exchange"
+	AdaptationOutcomeQueueName  = "amq.rabbitmq.reply-to"
 
 	inputMount                     = os.Getenv("INPUT_MOUNT")
 	adaptationRequestQueueHostname = os.Getenv("ADAPTATION_REQUEST_QUEUE_HOSTNAME")
@@ -37,14 +37,14 @@ func main() {
 	}
 
 	// Initiate a publisher on processing exchange
-	publisher, err = rabbitmq.NewQueuePublisher(connection, "outcome-exchange")
+	publisher, err = rabbitmq.NewQueuePublisher(connection, AdaptationOutcomeExchange)
 	if err != nil {
 		log.Fatalf("could not start publisher %s", err)
 	}
 	defer publisher.Close()
 
 	// Start a consumer
-	msgs, ch, err := rabbitmq.NewQueueConsumer(connection, queueName, exchange, routingKey)
+	msgs, ch, err := rabbitmq.NewQueueConsumer(connection, ProcessingOutcomeQueueName, ProcessingOutcomeExchange, ProcessingOutcomeRoutingKey)
 	if err != nil {
 		log.Fatalf("could not start consumer %s", err)
 	}

@@ -1,5 +1,28 @@
 # go-k8s-srv2
 
+<h1 align="center">icap-service-2</h1>
+
+<p align="center">
+    <a href="https://github.com/k8-proxy/go-k8s-srv2/actions/workflows/build.yaml">
+        <img src="https://github.com/k8-proxy/go-k8s-srv2/actions/workflows/build.yaml/badge.svg"/>
+    </a>
+    <a href="https://codecov.io/gh/k8-proxy/go-k8s-srv2">
+        <img src="https://codecov.io/gh/k8-proxy/go-k8s-srv2/branch/main/graph/badge.svg"/>
+    </a>	    
+    <a href="https://goreportcard.com/report/github.com/k8-proxy/go-k8s-srv2">
+      <img src="https://goreportcard.com/badge/k8-proxy/go-k8s-srv2" alt="Go Report Card">
+    </a>
+	<a href="https://github.com/k8-proxy/go-k8s-srv2/pulls">
+        <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="Contributions welcome">
+    </a>
+    <a href="https://opensource.org/licenses/Apache-2.0">
+        <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache License, Version 2.0">
+    </a>
+    <a href="https://github.com/k8-proxy/go-k8s-srv2/releases/latest">
+        <img src="https://img.shields.io/github/release/k8-proxy/go-k8s-srv1.svg?style=flat"/>
+    </a>
+</p>
+
 This service is as per the architecture the first proxy service that will get the file from icap-server and upload it to minio
 
 ### Steps of processing

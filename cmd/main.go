@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/k8-proxy/k8-go-comm/pkg/minio"
 	"github.com/k8-proxy/k8-go-comm/pkg/rabbitmq"
@@ -101,10 +102,27 @@ func processMessage(d amqp.Delivery) error {
 	if err != nil {
 		return err
 	}
+	if d.Headers["report-presigned-url"] != nil {
+		reportPresignedURL := d.Headers["report-presigned-url"].(string)
+		p := fmt.Sprintf("%s/%s", filepath.Dir(outputFileLocation), "transactions")
+
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			os.MkdirAll(p, 0777)
+		}
+
+		reportFileLocation := fmt.Sprintf("%s/%s", p, "report.xml")
+
+		err := minio.DownloadObject(reportPresignedURL, reportFileLocation)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.Headers["file-outcome"] = "replace"
 	// Publish the details to Rabbit
+
 	err = rabbitmq.PublishMessage(publisher, "", d.Headers["reply-to"].(string), d.Headers, []byte(""))
+
 	if err != nil {
 		return err
 	}

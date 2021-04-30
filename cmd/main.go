@@ -25,6 +25,8 @@ var (
 	messagebrokeruser              = os.Getenv("MESSAGE_BROKER_USER")
 	messagebrokerpassword          = os.Getenv("MESSAGE_BROKER_PASSWORD")
 
+	transactionStorePath = os.Getenv("TRANSACTION_STORE_PATH")
+
 	publisher *amqp.Channel
 )
 
@@ -78,9 +80,12 @@ func processMessage(d amqp.Delivery) error {
 		}*/
 
 	fmt.Printf("%+v\n", d.Headers)
+
 	fileID := ""
 	outputFileLocation := ""
 	cleanPresignedURL := ""
+	reportFileName := "report.xml"
+
 	if d.Headers["file-id"] != nil {
 		log.Printf("file id is ok")
 		fileID = d.Headers["file-id"].(string)
@@ -101,10 +106,29 @@ func processMessage(d amqp.Delivery) error {
 	if err != nil {
 		return err
 	}
+	if d.Headers["report-presigned-url"] != nil {
+		reportPresignedURL := d.Headers["report-presigned-url"].(string)
+		reportPath := fmt.Sprintf("%s/%s", transactionStorePath, fileID)
+
+		if _, err := os.Stat(reportPath); os.IsNotExist(err) {
+			os.MkdirAll(reportPath, 0777)
+		}
+
+		reportFileLocation := fmt.Sprintf("%s/%s", reportPath, reportFileName)
+
+		log.Println("report file location ", reportFileLocation)
+
+		err := minio.DownloadObject(reportPresignedURL, reportFileLocation)
+		if err != nil {
+			return err
+		}
+	}
 
 	d.Headers["file-outcome"] = "replace"
 	// Publish the details to Rabbit
+
 	err = rabbitmq.PublishMessage(publisher, "", d.Headers["reply-to"].(string), d.Headers, []byte(""))
+
 	if err != nil {
 		return err
 	}

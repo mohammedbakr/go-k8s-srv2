@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/k8-proxy/k8-go-comm/pkg/minio"
 	"github.com/k8-proxy/k8-go-comm/pkg/rabbitmq"
@@ -25,6 +24,8 @@ var (
 	adaptationRequestQueuePort     = os.Getenv("ADAPTATION_REQUEST_QUEUE_PORT")
 	messagebrokeruser              = os.Getenv("MESSAGE_BROKER_USER")
 	messagebrokerpassword          = os.Getenv("MESSAGE_BROKER_PASSWORD")
+
+	transactionStorePath = os.Getenv("TRANSACTION_STORE_PATH")
 
 	publisher *amqp.Channel
 )
@@ -79,9 +80,12 @@ func processMessage(d amqp.Delivery) error {
 		}*/
 
 	fmt.Printf("%+v\n", d.Headers)
+
 	fileID := ""
 	outputFileLocation := ""
 	cleanPresignedURL := ""
+	reportFileName := "report.xml"
+
 	if d.Headers["file-id"] != nil {
 		log.Printf("file id is ok")
 		fileID = d.Headers["file-id"].(string)
@@ -104,13 +108,15 @@ func processMessage(d amqp.Delivery) error {
 	}
 	if d.Headers["report-presigned-url"] != nil {
 		reportPresignedURL := d.Headers["report-presigned-url"].(string)
-		p := fmt.Sprintf("%s/%s", filepath.Dir(outputFileLocation), "transactions")
+		reportPath := fmt.Sprintf("%s/%s", transactionStorePath, fileID)
 
-		if _, err := os.Stat(p); os.IsNotExist(err) {
-			os.MkdirAll(p, 0777)
+		if _, err := os.Stat(reportPath); os.IsNotExist(err) {
+			os.MkdirAll(reportPath, 0777)
 		}
 
-		reportFileLocation := fmt.Sprintf("%s/%s", p, "report.xml")
+		reportFileLocation := fmt.Sprintf("%s/%s", reportPath, reportFileName)
+
+		log.Println("report file location ", reportFileLocation)
 
 		err := minio.DownloadObject(reportPresignedURL, reportFileLocation)
 		if err != nil {

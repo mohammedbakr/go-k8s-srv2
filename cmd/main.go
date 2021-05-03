@@ -7,6 +7,7 @@ import (
 
 	"github.com/k8-proxy/k8-go-comm/pkg/minio"
 	"github.com/k8-proxy/k8-go-comm/pkg/rabbitmq"
+	miniov7 "github.com/minio/minio-go/v7"
 	"github.com/streadway/amqp"
 )
 
@@ -25,9 +26,16 @@ var (
 	messagebrokeruser              = os.Getenv("MESSAGE_BROKER_USER")
 	messagebrokerpassword          = os.Getenv("MESSAGE_BROKER_PASSWORD")
 
+	minioEndpoint     = os.Getenv("MINIO_ENDPOINT")
+	minioAccessKey    = os.Getenv("MINIO_ACCESS_KEY")
+	minioSecretKey    = os.Getenv("MINIO_SECRET_KEY")
+	sourceMinioBucket = os.Getenv("MINIO_SOURCE_BUCKET")
+	cleanMinioBucket  = os.Getenv("MINIO_CLEAN_BUCKET")
+
 	transactionStorePath = os.Getenv("TRANSACTION_STORE_PATH")
 
-	publisher *amqp.Channel
+	minioClient *miniov7.Client
+	publisher   *amqp.Channel
 )
 
 func main() {
@@ -51,6 +59,12 @@ func main() {
 		log.Fatalf("could not start consumer %s", err)
 	}
 	defer ch.Close()
+
+	minioClient, err = minio.NewMinioClient(minioEndpoint, minioAccessKey, minioSecretKey, false)
+
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 
 	forever := make(chan bool)
 
@@ -101,11 +115,18 @@ func processMessage(d amqp.Delivery) error {
 
 	log.Printf("Received a message for file: %s, clean presigned url %s outputFileLocation %s", fileID, cleanPresignedURL, outputFileLocation)
 
+	SourceFile := fileID
+	CleanFile := fmt.Sprintf("rebuild-%s", fileID)
+
+	defer RemoveProcessedFilesMinio(SourceFile, sourceMinioBucket)
+	defer RemoveProcessedFilesMinio(CleanFile, cleanMinioBucket)
+
 	// Download the file to output file location
 	err := minio.DownloadObject(cleanPresignedURL, outputFileLocation)
 	if err != nil {
 		return err
 	}
+
 	if d.Headers["report-presigned-url"] != nil {
 		reportPresignedURL := d.Headers["report-presigned-url"].(string)
 		reportPath := fmt.Sprintf("%s/%s", transactionStorePath, fileID)
@@ -134,4 +155,9 @@ func processMessage(d amqp.Delivery) error {
 	}
 
 	return nil
+}
+
+func RemoveProcessedFilesMinio(fileName, BucketName string) {
+	minio.DeleteObjectInMinio(minioClient, BucketName, fileName)
+
 }
